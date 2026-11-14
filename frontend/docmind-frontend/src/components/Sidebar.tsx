@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import {
   FileText, Trash2, ChevronDown, ChevronUp,
-  CheckCircle, Clock, AlertCircle, Loader2,
+  CheckCircle2, Clock, AlertCircle, Loader2,
   Upload, RefreshCw, X, FileType, FilePieChart, File,
   FolderOpen, MessageSquare
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useDocumentStore } from '../store/documentStore';
 import { useConversationStore } from '../store/conversationStore';
 import type { DocumentMetadataDto, DocumentStatus } from '../types';
@@ -26,36 +25,32 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function getFileEmoji(contentType: string): React.ReactNode {
-  if (contentType.includes('pdf')) return <FileText className="w-4 h-4 text-red-400" />;
-  if (contentType.includes('word') || contentType.includes('docx')) return <FileType className="w-4 h-4 text-blue-400" />;
-  if (contentType.includes('csv')) return <FilePieChart className="w-4 h-4 text-emerald-400" />;
-  return <File className="w-4 h-4 text-slate-400" />;
+function getFileIcon(contentType: string): React.ReactNode {
+  if (contentType.includes('pdf')) return <FileText className="w-3.5 h-3.5 text-rose-400" />;
+  if (contentType.includes('word') || contentType.includes('docx')) return <FileType className="w-3.5 h-3.5 text-blue-400" />;
+  if (contentType.includes('csv')) return <FilePieChart className="w-3.5 h-3.5 text-emerald-400" />;
+  return <File className="w-3.5 h-3.5 text-slate-400" />;
 }
 
-const STATUS_CONFIG: Record<DocumentStatus, { icon: React.ReactNode; color: string; dot: string; label: string }> = {
+const STATUS_CONFIG: Record<DocumentStatus, { icon: React.ReactNode; color: string; label: string }> = {
   INDEXED: {
-    icon: <CheckCircle className="w-3 h-3" />,
-    color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
-    dot: 'bg-emerald-400',
-    label: 'Indexed',
+    icon: <CheckCircle2 className="w-3 h-3 text-emerald-400" />,
+    color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    label: 'Ready',
   },
   PROCESSING: {
-    icon: <Loader2 className="w-3 h-3 animate-spin" />,
-    color: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-    dot: 'bg-amber-400 animate-pulse',
-    label: 'Processing',
+    icon: <Loader2 className="w-3 h-3 text-amber-400 animate-spin" />,
+    color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    label: 'Indexing',
   },
   UPLOADING: {
-    icon: <Clock className="w-3 h-3" />,
-    color: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-    dot: 'bg-blue-400 animate-pulse',
+    icon: <Clock className="w-3 h-3 text-blue-400" />,
+    color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
     label: 'Uploading',
   },
   FAILED: {
-    icon: <AlertCircle className="w-3 h-3" />,
-    color: 'text-red-400 bg-red-400/10 border-red-400/20',
-    dot: 'bg-red-400',
+    icon: <AlertCircle className="w-3 h-3 text-rose-400" />,
+    color: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
     label: 'Failed',
   },
 };
@@ -63,22 +58,12 @@ const STATUS_CONFIG: Record<DocumentStatus, { icon: React.ReactNode; color: stri
 const StatusBadge: React.FC<{ status: DocumentStatus }> = ({ status }) => {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.INDEXED;
   return (
-    <span className={clsx('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border', cfg.color)}>
+    <span className={clsx('inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium border', cfg.color)}>
       {cfg.icon}
-      {cfg.label}
+      <span>{cfg.label}</span>
     </span>
   );
 };
-
-const SkeletonDoc: React.FC = () => (
-  <div className="p-3 rounded-xl border border-slate-800 bg-slate-900/60 flex items-center gap-3 animate-pulse">
-    <div className="w-7 h-7 rounded-lg bg-slate-800 flex-shrink-0" />
-    <div className="flex-1 space-y-2">
-      <div className="h-3 bg-slate-800 rounded w-3/4" />
-      <div className="h-2 bg-slate-800/60 rounded w-1/2" />
-    </div>
-  </div>
-);
 
 const DocumentItem: React.FC<{ doc: DocumentMetadataDto }> = ({ doc }) => {
   const { selectedDocumentId, setSelectedDocumentId, deleteDocument } = useDocumentStore();
@@ -97,103 +82,81 @@ const DocumentItem: React.FC<{ doc: DocumentMetadataDto }> = ({ doc }) => {
   };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.18 }}
+    <div
       className={clsx(
-        'rounded-xl border transition-all duration-200 overflow-hidden',
+        'rounded-lg border transition-colors overflow-hidden',
         isSelected
-          ? 'border-indigo-500/60 bg-indigo-500/10 shadow-sm shadow-indigo-500/10'
-          : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-850'
+          ? 'border-blue-500/60 bg-blue-500/5'
+          : 'border-slate-800 bg-[#0b0f17] hover:border-slate-700 hover:bg-[#111827]'
       )}
     >
-      {/* Main row */}
+      {/* Row Header */}
       <div
-        className="flex items-start gap-2.5 p-3 cursor-pointer select-none"
+        className="flex items-center gap-2 p-2.5 cursor-pointer select-none"
         onClick={() => setSelectedDocumentId(isSelected ? null : doc.id)}
       >
-        <div className={clsx(
-          'p-1.5 rounded-lg flex-shrink-0 mt-0.5 transition-colors',
-          isSelected ? 'bg-indigo-500/20' : 'bg-slate-950'
-        )}>
-          {getFileEmoji(doc.contentType)}
+        <div className="p-1 rounded bg-slate-900 border border-slate-800 flex-shrink-0">
+          {getFileIcon(doc.contentType)}
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-white truncate leading-tight" title={doc.filename}>
+          <p className="text-xs font-medium text-slate-200 truncate leading-tight" title={doc.filename}>
             {doc.filename}
           </p>
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 mt-1">
             <StatusBadge status={doc.status} />
-            <span className="text-[10px] text-slate-500">{formatBytes(doc.fileSize)}</span>
+            <span className="text-[10px] text-slate-500 font-mono">{formatBytes(doc.fileSize)}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-0.5 flex-shrink-0 mt-0.5">
+        <div className="flex items-center gap-0.5 flex-shrink-0">
           <button
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-            aria-label={expanded ? 'Collapse document details' : 'Expand document details'}
-            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500"
+            aria-label={expanded ? 'Collapse details' : 'Expand details'}
+            className="p-1 hover:bg-slate-800 text-slate-500 hover:text-slate-300 rounded cursor-pointer"
           >
-            {expanded
-              ? <ChevronUp className="w-3.5 h-3.5" />
-              : <ChevronDown className="w-3.5 h-3.5" />}
+            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-            aria-label={confirmDelete ? 'Confirm delete document' : 'Delete document'}
+            aria-label={confirmDelete ? 'Confirm delete' : 'Delete document'}
             className={clsx(
-              'p-1 rounded-lg transition-all text-xs cursor-pointer focus-visible:ring-2 focus-visible:ring-red-500',
+              'p-1 rounded text-xs transition-colors cursor-pointer',
               confirmDelete
-                ? 'bg-red-500/20 text-red-400 px-2 font-medium'
-                : 'hover:bg-red-500/10 hover:text-red-400 text-slate-400'
+                ? 'bg-rose-500/20 text-rose-400 px-1.5 font-medium'
+                : 'hover:bg-rose-500/10 hover:text-rose-400 text-slate-500'
             )}
           >
-            {confirmDelete ? 'Sure?' : <Trash2 className="w-3.5 h-3.5" />}
+            {confirmDelete ? 'Delete?' : <Trash2 className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
 
-      {/* Expanded info */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.15 }}
-            className="px-3 pb-3 border-t border-slate-800/80 overflow-hidden"
-          >
-            <div className="grid grid-cols-3 gap-1.5 mt-2.5">
-              {doc.totalChunks != null && (
-                <div className="bg-slate-950 rounded-lg p-2 text-center border border-slate-850">
-                  <p className="text-base font-bold text-indigo-400">{doc.totalChunks}</p>
-                  <p className="text-[10px] text-slate-500">chunks</p>
-                </div>
-              )}
-              {doc.totalPages != null && (
-                <div className="bg-slate-950 rounded-lg p-2 text-center border border-slate-850">
-                  <p className="text-base font-bold text-slate-200">{doc.totalPages}</p>
-                  <p className="text-[10px] text-slate-500">pages</p>
-                </div>
-              )}
-              <div className="bg-slate-950 rounded-lg p-2 text-center border border-slate-850">
-                <p className="text-xs font-semibold text-slate-200">{formatDate(doc.createdAt)}</p>
-                <p className="text-[10px] text-slate-500">added</p>
-              </div>
+      {/* Expanded Metadata */}
+      {expanded && (
+        <div className="px-2.5 pb-2.5 pt-1 border-t border-slate-800/80 bg-slate-950/40 text-[11px] text-slate-400">
+          <div className="grid grid-cols-3 gap-1.5 text-center mt-1">
+            <div className="bg-[#111827] rounded p-1.5 border border-slate-800">
+              <span className="block font-semibold text-slate-200">{doc.totalChunks ?? 0}</span>
+              <span className="text-[9px] text-slate-500 uppercase">Chunks</span>
             </div>
-            {doc.errorMessage && (
-              <div className="mt-2 px-2.5 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <p className="text-xs text-red-400">{doc.errorMessage}</p>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+            <div className="bg-[#111827] rounded p-1.5 border border-slate-800">
+              <span className="block font-semibold text-slate-200">{doc.totalPages ?? '-'}</span>
+              <span className="text-[9px] text-slate-500 uppercase">Pages</span>
+            </div>
+            <div className="bg-[#111827] rounded p-1.5 border border-slate-800">
+              <span className="block font-semibold text-slate-200 truncate">{formatDate(doc.createdAt)}</span>
+              <span className="text-[9px] text-slate-500 uppercase">Date</span>
+            </div>
+          </div>
+          {doc.errorMessage && (
+            <div className="mt-2 p-1.5 bg-rose-500/10 border border-rose-500/20 rounded text-rose-400 text-[10px]">
+              {doc.errorMessage}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -221,77 +184,68 @@ export const Sidebar: React.FC<SidebarProps> = ({ onUploadClick }) => {
 
   return (
     <>
-      {/* Mobile backdrop */}
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-30 md:hidden"
-            aria-hidden="true"
-          />
-        )}
-      </AnimatePresence>
+      {/* Mobile Backdrop */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          aria-hidden="true"
+        />
+      )}
 
       <aside
         className={clsx(
-          'flex flex-col h-full bg-slate-900 border-r border-slate-800 transition-all duration-250 ease-in-out flex-shrink-0 z-30 md:static fixed inset-y-0 left-0 top-14 md:top-0',
-          isSidebarOpen ? 'w-72 shadow-2xl md:shadow-none' : 'w-0 -translate-x-full md:translate-x-0 overflow-hidden border-r-0'
+          'flex flex-col h-full bg-[#111827] border-r border-slate-800 transition-all duration-200 flex-shrink-0 z-30 md:static fixed inset-y-0 left-0 top-13 md:top-0',
+          isSidebarOpen ? 'w-68' : 'w-0 -translate-x-full md:translate-x-0 overflow-hidden border-r-0'
         )}
       >
-        {/* Sidebar Mode Tabs */}
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-800 flex-shrink-0 bg-slate-950/70">
-          <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-xl border border-slate-800">
+        {/* Sidebar Header Tabs */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800 flex-shrink-0 bg-[#0b0f17]">
+          <div className="flex items-center p-0.5 bg-slate-900 border border-slate-800 rounded-md">
             <button
               onClick={() => setSidebarTab('documents')}
-              aria-label="View uploaded documents"
               className={clsx(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500',
+                'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer',
                 sidebarTab === 'documents'
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-slate-800 text-white'
+                  : 'text-slate-400 hover:text-slate-200'
               )}
             >
               <FolderOpen className="w-3.5 h-3.5" />
-              <span>Docs</span>
-              <span className={clsx('text-[10px] px-1.5 py-0.2 rounded-full font-mono', sidebarTab === 'documents' ? 'bg-indigo-700' : 'bg-slate-950 text-slate-400')}>
+              <span>Files</span>
+              <span className="text-[10px] px-1 rounded bg-slate-900 text-slate-400 font-mono">
                 {documents.length}
               </span>
             </button>
 
             <button
               onClick={() => setSidebarTab('chats')}
-              aria-label="View chat history"
               className={clsx(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500',
+                'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer',
                 sidebarTab === 'chats'
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-slate-800 text-white'
+                  : 'text-slate-400 hover:text-slate-200'
               )}
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Chats</span>
-              <span className={clsx('text-[10px] px-1.5 py-0.2 rounded-full font-mono', sidebarTab === 'chats' ? 'bg-indigo-700' : 'bg-slate-950 text-slate-400')}>
+              <span>History</span>
+              <span className="text-[10px] px-1 rounded bg-slate-900 text-slate-400 font-mono">
                 {conversations.length}
               </span>
             </button>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button
               onClick={handleRefresh}
-              aria-label="Refresh content"
-              className="p-1.5 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer text-slate-400 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded cursor-pointer"
               title="Refresh"
             >
-              <RefreshCw className={clsx('w-3.5 h-3.5', isLoadingDocuments && 'animate-spin text-indigo-400')} />
+              <RefreshCw className={clsx('w-3.5 h-3.5', isLoadingDocuments && 'animate-spin text-blue-400')} />
             </button>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              aria-label="Close sidebar"
-              className="p-1.5 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer text-slate-400 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded cursor-pointer md:hidden"
               title="Close sidebar"
             >
               <X className="w-3.5 h-3.5" />
@@ -303,67 +257,51 @@ export const Sidebar: React.FC<SidebarProps> = ({ onUploadClick }) => {
           <ChatsPanel />
         ) : (
           <div className="flex flex-col h-full overflow-hidden">
-            {/* Upload CTA */}
+            {/* Quick Upload Action */}
             <div className="p-3 border-b border-slate-800 flex-shrink-0">
               <button
                 onClick={onUploadClick}
-                aria-label="Upload documents"
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white text-xs sm:text-sm font-medium rounded-xl transition-all shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#0b0f17] hover:bg-slate-800 border border-slate-800 text-slate-200 hover:text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
               >
-                <Upload className="w-4 h-4" />
-                <span>Upload Documents</span>
+                <Upload className="w-3.5 h-3.5 text-blue-400" />
+                <span>Upload New Document</span>
               </button>
             </div>
 
-            {/* Active filter chip */}
+            {/* Active Document Filter Filter Banner */}
             {selectedDocumentId && (
-              <div className="px-3 py-2 flex-shrink-0 border-b border-slate-800/80">
-                <button
-                  onClick={() => setSelectedDocumentId(null)}
-                  aria-label="Clear document filter"
-                  className="flex items-center gap-1.5 text-xs text-indigo-300 hover:text-white bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 px-3 py-1.5 rounded-lg transition-all w-full justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  <span>Clear document filter</span>
-                </button>
+              <div className="px-3 py-2 border-b border-slate-800 bg-blue-500/5">
+                <div className="flex items-center justify-between text-xs text-blue-400">
+                  <span className="truncate">Filtering by selected doc</span>
+                  <button
+                    onClick={() => setSelectedDocumentId(null)}
+                    className="text-[11px] underline hover:text-blue-300 ml-2 cursor-pointer flex-shrink-0"
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* Doc list */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {/* Document List */}
+            <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5">
               {isLoadingDocuments ? (
-                <div className="space-y-2">
-                  <SkeletonDoc />
-                  <SkeletonDoc />
-                  <SkeletonDoc />
+                <div className="p-4 text-center text-xs text-slate-500">
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2 text-slate-400" />
+                  Loading repository...
                 </div>
               ) : documents.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex flex-col items-center justify-center h-52 text-center px-4"
-                >
-                  <div className="w-12 h-12 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center mb-3 shadow-inner">
-                    <FileText className="w-6 h-6 text-slate-500" />
+                <div className="p-6 text-center text-xs text-slate-500">
+                  <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto mb-2 text-slate-600">
+                    <FileText className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-slate-300 font-semibold">No documents yet</p>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                    Upload PDF, DOCX, TXT, MD or CSV files to get started
-                  </p>
-                  <button
-                    onClick={onUploadClick}
-                    className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 font-medium underline underline-offset-4 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
-                  >
-                    Upload first document &rarr;
-                  </button>
-                </motion.div>
+                  <p className="font-medium text-slate-400">No documents yet</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Upload PDF, Word, or Markdown to index.</p>
+                </div>
               ) : (
-                <AnimatePresence mode="popLayout">
-                  {documents.map((doc) => (
-                    <DocumentItem key={doc.id} doc={doc} />
-                  ))}
-                </AnimatePresence>
+                documents.map((doc) => (
+                  <DocumentItem key={doc.id} doc={doc} />
+                ))
               )}
             </div>
           </div>

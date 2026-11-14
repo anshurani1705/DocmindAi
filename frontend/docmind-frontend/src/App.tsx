@@ -30,14 +30,14 @@ const Dashboard: React.FC = () => {
   }, [token, user, fetchDocuments, loadChats]);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#0f172a]">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#0b0f17]">
       <Navbar onUploadClick={() => setIsUploadOpen(true)} />
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar onUploadClick={() => setIsUploadOpen(true)} />
 
         {/* Main content */}
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-hidden bg-[#0b0f17]">
           {activeTab === 'chat' && <ChatView />}
           {activeTab === 'search' && <SearchView />}
           {activeTab === 'chunks' && <ChunksView />}
@@ -69,17 +69,17 @@ const App: React.FC = () => {
         position="bottom-right"
         toastOptions={{
           style: {
-            background: '#1e293b',
-            color: '#f1f5f9',
-            border: '1px solid #334155',
-            borderRadius: '12px',
-            fontSize: '14px',
+            background: '#111827',
+            color: '#f8fafc',
+            border: '1px solid #1e293b',
+            borderRadius: '8px',
+            fontSize: '13px',
           },
           success: {
-            iconTheme: { primary: '#22c55e', secondary: '#1e293b' },
+            iconTheme: { primary: '#10b981', secondary: '#111827' },
           },
           error: {
-            iconTheme: { primary: '#ef4444', secondary: '#1e293b' },
+            iconTheme: { primary: '#ef4444', secondary: '#111827' },
           },
         }}
       />

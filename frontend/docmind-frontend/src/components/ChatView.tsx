@@ -16,7 +16,7 @@ import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-markdown';
 import {
   Send, Bot, User, Loader2, ChevronDown, ChevronUp, FileText,
-  Zap, Sparkles, RotateCcw, Square, Copy, Check, Wifi, WifiOff,
+  Zap, RotateCcw, Square, Copy, Check, Wifi, WifiOff, SlidersHorizontal, BookOpen, Shield, Search
 } from 'lucide-react';
 import { chatApi } from '../services/api';
 import { useDocumentStore } from '../store/documentStore';
@@ -25,47 +25,38 @@ import type { ConversationMessage, CitationDto } from '../types';
 import { clsx } from 'clsx';
 import toast from 'react-hot-toast';
 
-/* ─── Prompt templates ──────────────────────────────────────────── */
+/* ─── Structured Prompt Templates ────────────────────────────────── */
 const PROMPT_TEMPLATES = [
   {
-    category: 'Summarization',
-    icon: '📋',
-    gradient: 'from-indigo-500/15 to-purple-500/15',
-    border: 'border-indigo-500/25',
-    accent: 'text-indigo-400',
+    category: 'Summary',
+    icon: BookOpen,
     templates: [
       { label: 'Executive Summary', prompt: 'Provide a concise executive summary of the key points in this document.' },
-      { label: 'Key Findings', prompt: 'What are the key findings and conclusions from this document?' },
-      { label: 'Action Items', prompt: 'List all action items, tasks, and next steps mentioned in this document.' },
+      { label: 'Key Takeaways', prompt: 'What are the main findings and conclusions established here?' },
+      { label: 'Action Items', prompt: 'List all action items, decisions, and next steps described.' },
     ],
   },
   {
-    category: 'Legal & Compliance',
-    icon: '⚖️',
-    gradient: 'from-cyan-500/15 to-blue-500/15',
-    border: 'border-cyan-500/25',
-    accent: 'text-cyan-400',
+    category: 'Analysis & Compliance',
+    icon: Shield,
     templates: [
-      { label: 'Key Clauses', prompt: 'What are the most important clauses and provisions in this document?' },
-      { label: 'Obligations', prompt: 'What obligations and responsibilities are defined in this document?' },
-      { label: 'Risk Analysis', prompt: 'Identify potential risks, liabilities, and red flags in this document.' },
+      { label: 'Key Clauses', prompt: 'What are the most critical terms, obligations, and clauses specified?' },
+      { label: 'Risk Assessment', prompt: 'Identify any potential liabilities, dependencies, or risks noted.' },
+      { label: 'Responsibilities', prompt: 'Detail the primary responsibilities and stakeholders mentioned.' },
     ],
   },
   {
-    category: 'Analysis',
-    icon: '🔍',
-    gradient: 'from-emerald-500/15 to-teal-500/15',
-    border: 'border-emerald-500/25',
-    accent: 'text-emerald-400',
+    category: 'Extraction',
+    icon: Search,
     templates: [
-      { label: 'Data Points', prompt: 'Extract all key data points, statistics, and metrics from this document.' },
-      { label: 'Definitions', prompt: 'List and explain all key terms and definitions used in this document.' },
-      { label: 'Timeline', prompt: 'Create a chronological timeline of all events and dates mentioned.' },
+      { label: 'Key Metrics', prompt: 'Extract all relevant quantitative metrics, dates, and statistics.' },
+      { label: 'Definitions', prompt: 'List all domain-specific definitions and terminology used.' },
+      { label: 'Chronology', prompt: 'Provide a chronological timeline of all milestones and events.' },
     ],
   },
 ];
 
-/* ─── Prism token-to-React renderer (safe, no dangerouslySetInnerHTML) ─── */
+/* ─── Prism token-to-React renderer ──────────────────────────────── */
 function renderPrismTokens(tokens: (string | Prism.Token)[], keyPrefix = ''): React.ReactNode[] {
   return tokens.map((token, idx) => {
     const key = `${keyPrefix}-${idx}`;
@@ -103,7 +94,7 @@ const CodeBlock: React.FC<{ language: string; code: string }> = ({ language, cod
     await navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast.success('Code copied to clipboard');
+    toast.success('Code copied');
   };
 
   const normalizedLang = (language || 'text').toLowerCase();
@@ -111,25 +102,18 @@ const CodeBlock: React.FC<{ language: string; code: string }> = ({ language, cod
   const tokens = grammar ? Prism.tokenize(code, grammar) : [code];
 
   return (
-    <div className="my-3 rounded-xl border border-[#334155] bg-[#090d16] overflow-hidden text-xs shadow-md">
-      <div className="flex items-center justify-between px-3.5 py-2 bg-[#141d2e] border-b border-[#334155] text-slate-400 font-mono text-[11px]">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
-          </div>
-          <span className="font-semibold uppercase tracking-wider text-indigo-400 ml-1">{language || 'code'}</span>
-        </div>
+    <div className="my-2.5 rounded-lg border border-slate-800 bg-[#070a10] overflow-hidden text-xs">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-[#0e1420] border-b border-slate-800 text-slate-400 font-mono text-[11px]">
+        <span className="font-medium text-slate-300 uppercase">{language || 'code'}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-white px-2 py-1 rounded bg-[#1e293b] hover:bg-[#334155] transition-colors cursor-pointer"
+          className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-slate-800/60 hover:bg-slate-700 transition-colors cursor-pointer"
         >
-          {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-          <span>{copied ? 'Copied!' : 'Copy'}</span>
+          {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+          <span>{copied ? 'Copied' : 'Copy'}</span>
         </button>
       </div>
-      <div className="p-3.5 overflow-x-auto">
+      <div className="p-3 overflow-x-auto">
         <pre className="font-mono text-xs leading-relaxed text-slate-200 m-0 p-0 bg-transparent border-0">
           <code className={`language-${normalizedLang}`}>{renderPrismTokens(tokens, 'code')}</code>
         </pre>
@@ -138,102 +122,83 @@ const CodeBlock: React.FC<{ language: string; code: string }> = ({ language, cod
   );
 };
 
-/* ─── ReactMarkdown Renderer ──────────────────────────────────────── */
+/* ─── Markdown Content ────────────────────────────────────────────── */
 const MarkdownContent: React.FC<{ content: string; isStreaming?: boolean }> = ({ content, isStreaming }) => {
   return (
-    <div className="text-sm leading-relaxed overflow-hidden text-slate-200 space-y-2">
+    <div className="text-sm leading-relaxed overflow-hidden text-slate-200 space-y-2 prose">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           p({ children }) {
-            return <p className="mb-2.5 last:mb-0 leading-relaxed text-slate-200">{children}</p>;
-          },
-          h1({ children }) {
-            return <h1 className="text-xl font-bold text-white mt-4 mb-2 pb-1 border-b border-[#334155] first:mt-0">{children}</h1>;
-          },
-          h2({ children }) {
-            return <h2 className="text-lg font-bold text-white mt-3.5 mb-1.5 first:mt-0">{children}</h2>;
-          },
-          h3({ children }) {
-            return <h3 className="text-base font-semibold text-slate-100 mt-3 mb-1 first:mt-0">{children}</h3>;
-          },
-          h4({ children }) {
-            return <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-wider mt-2.5 mb-1 first:mt-0">{children}</h4>;
+            return <p className="mb-2 last:mb-0 leading-relaxed text-slate-200">{children}</p>;
           },
           ul({ children }) {
-            return <ul className="list-disc ml-5 pl-1 space-y-1.5 my-2 text-slate-200">{children}</ul>;
+            return <ul className="list-disc pl-5 mb-2 space-y-1 text-slate-200">{children}</ul>;
           },
           ol({ children }) {
-            return <ol className="list-decimal ml-5 pl-1 space-y-1.5 my-2 text-slate-200">{children}</ol>;
+            return <ol className="list-decimal pl-5 mb-2 space-y-1 text-slate-200">{children}</ol>;
           },
           li({ children }) {
-            return <li className="leading-relaxed pl-0.5">{children}</li>;
+            return <li className="leading-relaxed text-slate-300">{children}</li>;
           },
           blockquote({ children }) {
             return (
-              <blockquote className="border-l-4 border-indigo-500 bg-indigo-500/10 px-3.5 py-2 rounded-r-lg text-slate-300 italic my-2.5 text-xs leading-relaxed">
+              <blockquote className="border-l-2 border-blue-500 pl-3 my-2 text-slate-400 italic text-xs">
                 {children}
               </blockquote>
             );
           },
-          hr() {
-            return <hr className="border-[#334155] my-3.5" />;
-          },
-          a({ href, children }) {
-            return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors font-medium"
-              >
-                {children}
-              </a>
-            );
-          },
-          strong({ children }) {
-            return <strong className="font-semibold text-white">{children}</strong>;
-          },
-          em({ children }) {
-            return <em className="italic text-slate-300">{children}</em>;
-          },
-          del({ children }) {
-            return <del className="line-through text-slate-400">{children}</del>;
+          code({ className, children, ...props }) {
+            const match = /language-(\w+)/.exec(className || '');
+            const codeString = String(children).replace(/\n$/, '');
+            const isInline = !match && !codeString.includes('\n');
+
+            if (isInline) {
+              return (
+                <code className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-blue-300 font-mono text-xs" {...props}>
+                  {children}
+                </code>
+              );
+            }
+
+            return <CodeBlock language={match ? match[1] : ''} code={codeString} />;
           },
           table({ children }) {
             return (
-              <div className="my-3 overflow-x-auto rounded-xl border border-[#334155] shadow-sm">
-                <table className="min-w-full divide-y divide-[#334155] text-left text-xs">{children}</table>
+              <div className="overflow-x-auto my-2 border border-slate-800 rounded-lg">
+                <table className="min-w-full divide-y divide-slate-800 text-xs text-left">
+                  {children}
+                </table>
               </div>
             );
           },
           thead({ children }) {
-            return <thead className="bg-[#141d2e]">{children}</thead>;
-          },
-          tbody({ children }) {
-            return <tbody className="divide-y divide-[#1e293b] bg-[#090d16]">{children}</tbody>;
+            return <thead className="bg-[#0b0f17] text-slate-400 font-semibold">{children}</thead>;
           },
           th({ children }) {
-            return <th className="px-3.5 py-2.5 font-semibold text-white">{children}</th>;
+            return <th className="px-3 py-2 border-b border-slate-800">{children}</th>;
           },
           td({ children }) {
-            return <td className="px-3.5 py-2 text-slate-300">{children}</td>;
+            return <td className="px-3 py-2 border-b border-slate-800/60 text-slate-300">{children}</td>;
           },
-          code({ className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || '');
-            const codeString = String(children).replace(/\n$/, '');
-            const isMultiLine = codeString.includes('\n');
-            if (match || isMultiLine) {
-              return <CodeBlock language={match ? match[1] : ''} code={codeString} />;
-            }
+          h1({ children }) {
+            return <h1 className="text-base font-semibold text-white mt-3 mb-1.5">{children}</h1>;
+          },
+          h2({ children }) {
+            return <h2 className="text-sm font-semibold text-white mt-2.5 mb-1">{children}</h2>;
+          },
+          h3({ children }) {
+            return <h3 className="text-xs font-semibold text-slate-200 mt-2 mb-1">{children}</h3>;
+          },
+          hr() {
+            return <hr className="border-slate-800 my-3" />;
+          },
+          a({ href, children }) {
             return (
-              <code className="px-1.5 py-0.5 mx-0.5 bg-[#090d16] text-indigo-300 rounded text-[13px] font-mono border border-[#334155]">
+              <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
                 {children}
-              </code>
+              </a>
             );
-          },
-          pre({ children }) {
-            return <>{children}</>;
           },
         }}
       >
@@ -244,57 +209,48 @@ const MarkdownContent: React.FC<{ content: string; isStreaming?: boolean }> = ({
   );
 };
 
-/* ─── Citation card ─────────────────────────────────────────────── */
+/* ─── Citation Footnote Card ─────────────────────────────────────── */
 const CitationCard: React.FC<{ citation: CitationDto; index: number }> = ({ citation, index }) => {
   const [expanded, setExpanded] = useState(false);
   const score = citation.similarityScore ?? 0;
   const pct = (score * 100).toFixed(0);
-  const barColor = score >= 0.8 ? 'bg-emerald-500' : score >= 0.6 ? 'bg-amber-500' : 'bg-red-500';
-  const textColor = score >= 0.8 ? 'text-emerald-400' : score >= 0.6 ? 'text-amber-400' : 'text-red-400';
-
-  const ext = citation.fileName?.split('.').pop()?.toLowerCase();
-  const extColors: Record<string, string> = { pdf: 'text-red-400', docx: 'text-blue-400', csv: 'text-green-400', md: 'text-purple-400' };
 
   return (
-    <div className="border border-[#334155] rounded-xl overflow-hidden bg-[#0f172a] hover:border-[#475569] transition-colors">
+    <div className="border border-slate-800 rounded-lg overflow-hidden bg-[#0b0f17] text-xs transition-colors">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2.5 p-2.5 text-left cursor-pointer"
+        className="w-full flex items-center gap-2 p-2 text-left cursor-pointer hover:bg-slate-900/50"
       >
-        <span className="flex-shrink-0 w-5 h-5 bg-indigo-500/15 text-indigo-400 rounded-md text-xs flex items-center justify-center font-bold border border-indigo-500/20">
+        <span className="w-4 h-4 rounded bg-slate-800 text-slate-400 text-[10px] font-mono flex items-center justify-center flex-shrink-0">
           {index + 1}
         </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <FileText className={clsx('w-3 h-3 flex-shrink-0', extColors[ext ?? ''] ?? 'text-slate-400')} />
-            <p className="text-xs text-slate-200 font-medium truncate">{citation.fileName}</p>
-            {citation.pageNumber && <span className="text-xs text-slate-500 flex-shrink-0">p.{citation.pageNumber}</span>}
-          </div>
-          {/* Similarity bar */}
-          <div className="flex items-center gap-2 mt-1">
-            <div className="flex-1 h-1 bg-[#1e293b] rounded-full overflow-hidden">
-              <div className={clsx('h-1 rounded-full', barColor)} style={{ width: `${pct}%` }} />
-            </div>
-            <span className={clsx('text-[10px] font-bold flex-shrink-0', textColor)}>{pct}%</span>
-          </div>
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          <FileText className="w-3 h-3 text-slate-500 flex-shrink-0" />
+          <span className="font-medium text-slate-300 truncate">{citation.fileName}</span>
+          {citation.pageNumber && (
+            <span className="text-[10px] text-slate-500 flex-shrink-0">p. {citation.pageNumber}</span>
+          )}
         </div>
-        {expanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />}
+        <span className="text-[10px] font-mono text-blue-400 flex-shrink-0 bg-blue-500/10 px-1.5 py-0.2 rounded border border-blue-500/20">
+          {pct}% match
+        </span>
+        {expanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-500" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-500" />}
       </button>
+
       {expanded && (
-        <div className="px-3 pb-3 pt-0 border-t border-[#1e293b] animate-fade-in">
-          <p className="text-xs text-slate-400 leading-relaxed mt-2">{citation.snippet}</p>
+        <div className="px-3 pb-2.5 pt-1 border-t border-slate-800/80 bg-slate-950/40">
+          <p className="text-[11px] text-slate-400 leading-relaxed font-sans">{citation.snippet}</p>
         </div>
       )}
     </div>
   );
 };
 
-/* ─── Message bubble ────────────────────────────────────────────── */
+/* ─── Message Row ────────────────────────────────────────────────── */
 const MessageBubble: React.FC<{ message: ConversationMessage }> = ({ message }) => {
   const isUser = message.messageType === 'USER';
   const [showCitations, setShowCitations] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showTime, setShowTime] = useState(false);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);
@@ -308,76 +264,62 @@ const MessageBubble: React.FC<{ message: ConversationMessage }> = ({ message }) 
     : '';
 
   return (
-    <div
-      className={clsx('flex gap-3 group', isUser ? 'flex-row-reverse' : 'flex-row')}
-      onMouseEnter={() => setShowTime(true)}
-      onMouseLeave={() => setShowTime(false)}
-    >
-      {/* Avatar */}
-      <div className={clsx(
-        'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm mt-0.5',
-        isUser
-          ? 'bg-indigo-600 shadow-indigo-500/30'
-          : 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/30'
-      )}>
-        {isUser ? <User className="w-3.5 h-3.5 text-white" /> : <Bot className="w-3.5 h-3.5 text-white" />}
-      </div>
+    <div className={clsx('flex gap-3 group', isUser ? 'justify-end' : 'justify-start')}>
+      {!isUser && (
+        <div className="w-7 h-7 rounded-md bg-slate-900 border border-slate-800 text-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Bot className="w-4 h-4" />
+        </div>
+      )}
 
-      {/* Content */}
-      <div className={clsx('max-w-[78%] min-w-0', isUser ? 'items-end' : 'items-start')}>
-        <div className={clsx(
-          'rounded-2xl px-4 py-3 text-sm',
-          isUser
-            ? 'bg-indigo-600 text-white rounded-tr-sm shadow-sm shadow-indigo-500/20'
-            : 'bg-[#1e293b] border border-[#334155] rounded-tl-sm'
-        )}>
+      <div className={clsx('max-w-[82%] min-w-0', isUser && 'flex flex-col items-end')}>
+        {/* Bubble */}
+        <div
+          className={clsx(
+            'rounded-lg px-3.5 py-2.5 text-sm',
+            isUser
+              ? 'bg-blue-600 text-white'
+              : 'bg-[#111827] border border-slate-800 text-slate-200'
+          )}
+        >
           {isUser ? (
-            <p className="text-white leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            <p className="leading-relaxed whitespace-pre-wrap text-sm">{message.content}</p>
           ) : (
             <MarkdownContent content={message.content} isStreaming={message.isStreaming} />
           )}
         </div>
 
-        {/* Footer: citations + actions */}
-        <div className={clsx('flex items-center gap-2 mt-1.5', isUser ? 'justify-end' : 'justify-start')}>
-          {/* Timestamp */}
-          {timeStr && (
-            <span className={clsx('text-xs text-slate-600 transition-opacity', showTime ? 'opacity-100' : 'opacity-0')}>
-              {timeStr}
-            </span>
-          )}
-
+        {/* Metadata */}
+        <div className="flex items-center gap-2 mt-1 px-1">
+          {timeStr && <span className="text-[10px] text-slate-500">{timeStr}</span>}
           {!isUser && message.responseTimeMs !== undefined && message.responseTimeMs > 0 && (
-            <span className="flex items-center gap-1 text-xs text-slate-600">
+            <span className="flex items-center gap-0.5 text-[10px] text-slate-500 font-mono">
               <Zap className="w-2.5 h-2.5" />{message.responseTimeMs}ms
             </span>
           )}
-
-          {/* Copy button (assistant only) */}
           {!isUser && !message.isStreaming && message.content && (
             <button
               onClick={handleCopy}
-              className="opacity-0 group-hover:opacity-100 flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-all cursor-pointer"
-              title="Copy message"
+              className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 transition-opacity cursor-pointer p-0.5"
+              title="Copy"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
             </button>
           )}
         </div>
 
-        {/* Citations */}
+        {/* Citations section */}
         {!isUser && (message.citations?.length ?? 0) > 0 && !message.isStreaming && (
-          <div className="mt-2">
+          <div className="mt-2 w-full">
             <button
               onClick={() => setShowCitations(!showCitations)}
-              className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
             >
-              <FileText className="w-3.5 h-3.5" />
-              {message.citations!.length} source{message.citations!.length > 1 ? 's' : ''}
-              {showCitations ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              <FileText className="w-3 h-3 text-blue-400" />
+              <span>{message.citations!.length} Source Reference{message.citations!.length > 1 ? 's' : ''}</span>
+              {showCitations ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
             {showCitations && (
-              <div className="mt-2 space-y-1.5 animate-fade-in">
+              <div className="mt-1.5 space-y-1">
                 {message.citations!.map((c, i) => (
                   <CitationCard key={i} citation={c} index={i} />
                 ))}
@@ -386,18 +328,24 @@ const MessageBubble: React.FC<{ message: ConversationMessage }> = ({ message }) 
           </div>
         )}
       </div>
+
+      {isUser && (
+        <div className="w-7 h-7 rounded-md bg-blue-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
+          <User className="w-3.5 h-3.5" />
+        </div>
+      )}
     </div>
   );
 };
 
-/* ─── Typing indicator ───────────────────────────────────────────── */
+/* ─── Typing Indicator ───────────────────────────────────────────── */
 const TypingIndicator = () => (
-  <div className="flex gap-3 animate-fade-in">
-    <div className="w-8 h-8 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-      <Bot className="w-3.5 h-3.5 text-white" />
+  <div className="flex gap-3">
+    <div className="w-7 h-7 rounded-md bg-slate-900 border border-slate-800 text-blue-400 flex items-center justify-center flex-shrink-0">
+      <Bot className="w-4 h-4" />
     </div>
-    <div className="bg-[#1e293b] border border-[#334155] rounded-2xl rounded-tl-sm px-4 py-3">
-      <div className="flex items-center gap-1 h-4">
+    <div className="bg-[#111827] border border-slate-800 rounded-lg px-3.5 py-2.5">
+      <div className="flex items-center gap-1 h-3.5">
         <div className="typing-dot" />
         <div className="typing-dot" />
         <div className="typing-dot" />
@@ -406,7 +354,7 @@ const TypingIndicator = () => (
   </div>
 );
 
-/* ─── Main ChatView ──────────────────────────────────────────────── */
+/* ─── Main Chat View Component ────────────────────────────────────── */
 const ChatView: React.FC = () => {
   const { selectedDocumentId, documents } = useDocumentStore();
   const {
@@ -426,6 +374,11 @@ const ChatView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [showTemplates, setShowTemplates] = useState(true);
+  const [showConfig, setShowConfig] = useState(false);
+
+  // Retrieval parameters
+  const [topK, setTopK] = useState(5);
+  const [minSimilarity, setMinSimilarity] = useState(0.0);
 
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -439,7 +392,6 @@ const ChatView: React.FC = () => {
     const el = chatContainerRef.current;
     if (!el) return;
     const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    // Keep auto-scroll active if user is near bottom (<120px)
     shouldAutoScrollRef.current = distanceToBottom < 120;
   }, []);
 
@@ -449,415 +401,311 @@ const ChatView: React.FC = () => {
     }
   }, [messages.length, isLoading, isStreaming]);
 
-  /* ── Stream handler ── */
-  const sendStreaming = useCallback(async (question: string, convId: string) => {
-    const assistantMsgId = crypto.randomUUID();
-    const startTime = Date.now();
-
-    // Append empty streaming assistant bubble
-    await appendMessage(convId, {
-      id: assistantMsgId,
-      messageType: 'ASSISTANT',
-      content: '',
-      createdAt: new Date().toISOString(),
-      isStreaming: true,
-    });
-
-    setIsStreaming(true);
-
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    // Fetch citations in parallel so it doesn't block UI after streaming ends
-    const citationPromise = chatApi.searchSimilarity({
-      query: question,
-      documentId: selectedDocumentId ?? undefined,
-      topK: 5,
-    }).catch(() => null);
-
-    try {
-      const response = await chatApi.stream(
-        {
-          question,
-          documentId: selectedDocumentId ?? undefined,
-          topK: 5,
-          conversationId: convId,
-        },
-        controller.signal
-      );
-
-      if (!response.ok) {
-        let errorDetail = `HTTP ${response.status}`;
-        try {
-          const errData = await response.json();
-          if (errData?.message) errorDetail = errData.message;
-        } catch {
-          // ignore JSON parsing errors
-        }
-        throw new Error(errorDetail);
-      }
-      if (!response.body) throw new Error('No response body');
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let accumulated = '';
-      let streamEnded = false;
-      let lastRenderTime = 0;
-      const THROTTLE_MS = 35; // 35ms buffer to avoid excessive React renders on individual tokens
-
-      const flushUpdate = (streaming: boolean) => {
-        updateLastMessageContent(convId, assistantMsgId, accumulated, streaming);
-        if (shouldAutoScrollRef.current) {
-          bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }
-      };
-
-      const contentType = response.headers.get('content-type') || '';
-      const isEventStream = contentType.includes('text/event-stream');
-
-      while (!streamEnded) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const textChunk = decoder.decode(value, { stream: true });
-
-        if (isEventStream) {
-          buffer += textChunk;
-          // SSE events are separated by double newlines \n\n or \r\n\r\n
-          const eventBlocks = buffer.split(/\r?\n\r?\n/);
-          // The last piece is either incomplete or trailing after the delimiter
-          buffer = eventBlocks.pop() || '';
-
-          for (const block of eventBlocks) {
-            if (!block) continue;
-
-            const lines = block.split(/\r?\n/);
-            const dataLines: string[] = [];
-
-            for (const line of lines) {
-              if (line.startsWith('data:')) {
-                const data = line.slice(5);
-                dataLines.push(data);
-              }
-            }
-
-            if (dataLines.length > 0) {
-              const eventData = dataLines.join('\n');
-              if (eventData.trim() === '[DONE]') {
-                streamEnded = true;
-                break;
-              }
-              accumulated += eventData;
-            }
-          }
-        } else {
-          if (textChunk.includes('[DONE]')) {
-            accumulated += textChunk.replace('[DONE]', '');
-            streamEnded = true;
-          } else {
-            accumulated += textChunk;
-          }
-        }
-
-        const now = Date.now();
-        if (now - lastRenderTime >= THROTTLE_MS || streamEnded) {
-          lastRenderTime = now;
-          flushUpdate(true);
-        }
-      }
-
-      // Flush remaining SSE buffer if any
-      if (!streamEnded && isEventStream && buffer.trim()) {
-        const lines = buffer.split(/\r?\n/);
-        const dataLines: string[] = [];
-        for (const line of lines) {
-          if (line.startsWith('data:')) {
-            const data = line.slice(5);
-            dataLines.push(data);
-          }
-        }
-        if (dataLines.length > 0) {
-          const eventData = dataLines.join('\n');
-          if (eventData.trim() !== '[DONE]') {
-            accumulated += eventData;
-          }
-        }
-      }
-
-      try {
-        await reader.cancel();
-      } catch {
-        // Ignore reader cancellation error
-      }
-
-      const responseTimeMs = Date.now() - startTime;
-
-      // Stream completed — IMMEDIATELY remove streaming state
-      setIsStreaming(false);
-      abortRef.current = null;
-      updateLastMessageContent(convId, assistantMsgId, accumulated, false);
-      if (shouldAutoScrollRef.current) {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }
-
-      // Attach citations once similarity search finishes in background
-      const simRes = await citationPromise;
-      if (simRes?.data?.matches?.length) {
-        await updateMessageMetadata(convId, assistantMsgId, {
-          citations: simRes.data.matches,
-          responseTimeMs,
-          isStreaming: false,
-        });
-      } else {
-        await updateMessageMetadata(convId, assistantMsgId, {
-          responseTimeMs,
-          isStreaming: false,
-        });
-      }
-
-    } catch (err: unknown) {
-      if ((err as Error).name === 'AbortError') {
-        updateLastMessageContent(convId, assistantMsgId, 'Response generation stopped.', false);
-      } else {
-        const msg = err instanceof Error ? err.message : 'Stream failed';
-        toast.error(msg);
-        updateLastMessageContent(convId, assistantMsgId, `❌ ${msg}`, false);
-      }
-    } finally {
-      setIsStreaming(false);
+  const stopStream = () => {
+    if (abortRef.current) {
+      abortRef.current.abort();
       abortRef.current = null;
     }
-  }, [selectedDocumentId, appendMessage, updateLastMessageContent, updateMessageMetadata]);
+    setIsStreaming(false);
+    setIsLoading(false);
+  };
 
-  /* ── Normal query handler ── */
-  const sendNormal = useCallback(async (question: string, convId: string) => {
-    setIsLoading(true);
-    try {
-      const res = await chatApi.query({
-        question,
-        documentId: selectedDocumentId ?? undefined,
-        topK: 5,
-        conversationId: convId,
-      });
+  const sendMessage = async (questionText: string) => {
+    const trimmed = questionText.trim();
+    if (!trimmed || isLoading || isStreaming) return;
 
-      await appendMessage(convId, {
-        id: crypto.randomUUID(),
-        messageType: 'ASSISTANT',
-        content: res.data.answer,
-        citations: res.data.citations,
-        responseTimeMs: res.data.responseTimeMs,
-        createdAt: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Something went wrong';
-      toast.error(msg);
-      await appendMessage(convId, {
-        id: crypto.randomUUID(),
-        messageType: 'ASSISTANT',
-        content: `❌ ${msg}`,
-        createdAt: new Date().toISOString(),
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedDocumentId, appendMessage]);
-
-  /* ── Send dispatcher ── */
-  const sendMessage = useCallback(async (question: string) => {
-    if (!question.trim() || isLoading || isStreaming) return;
+    setInput('');
     setShowTemplates(false);
 
-    const convId = activeConversationId || crypto.randomUUID();
+    // Append User Message
     const userMsg: ConversationMessage = {
       id: crypto.randomUUID(),
       messageType: 'USER',
-      content: question.trim(),
+      content: trimmed,
       createdAt: new Date().toISOString(),
     };
+    appendMessage(activeConversationId, userMsg);
 
-    setInput('');
-    if (inputRef.current) { inputRef.current.style.height = 'auto'; }
-
-    await appendMessage(convId, userMsg);
+    const startTime = Date.now();
 
     if (streamingMode) {
-      await sendStreaming(question.trim(), convId);
-    } else {
-      await sendNormal(question.trim(), convId);
-    }
-    inputRef.current?.focus();
-  }, [isLoading, isStreaming, activeConversationId, streamingMode, appendMessage, sendStreaming, sendNormal]);
+      setIsStreaming(true);
+      const assistantMsg: ConversationMessage = {
+        id: crypto.randomUUID(),
+        messageType: 'ASSISTANT',
+        content: '',
+        createdAt: new Date().toISOString(),
+        isStreaming: true,
+      };
+      appendMessage(activeConversationId, assistantMsg);
 
-  const stopStream = () => {
-    abortRef.current?.abort();
+      abortRef.current = new AbortController();
+
+      try {
+        const streamResponse = await chatApi.stream(
+          {
+            question: trimmed,
+            documentId: selectedDocumentId ?? undefined,
+            topK,
+            minSimilarity,
+            conversationId: activeConversationId,
+          },
+          abortRef.current.signal
+        );
+
+        if (!streamResponse.ok) {
+          throw new Error(`Server returned HTTP ${streamResponse.status}`);
+        }
+
+        const reader = streamResponse.body?.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            fullText += chunk;
+            updateLastMessageContent(activeConversationId, assistantMsg.id, fullText, true);
+          }
+        }
+
+        const responseTime = Date.now() - startTime;
+        updateMessageMetadata(activeConversationId, assistantMsg.id, {
+          isStreaming: false,
+          responseTimeMs: responseTime,
+        });
+      } catch (err: unknown) {
+        if ((err as Error).name !== 'AbortError') {
+          toast.error('Streaming interrupted or failed');
+        }
+      } finally {
+        setIsStreaming(false);
+        abortRef.current = null;
+      }
+    } else {
+      setIsLoading(true);
+      try {
+        const response = await chatApi.query({
+          question: trimmed,
+          documentId: selectedDocumentId ?? undefined,
+          topK,
+          minSimilarity,
+          conversationId: activeConversationId,
+        });
+
+        const data = response.data;
+        const assistantMsg: ConversationMessage = {
+          id: crypto.randomUUID(),
+          messageType: 'ASSISTANT',
+          content: data.answer,
+          citations: data.citations,
+          responseTimeMs: data.responseTimeMs,
+          createdAt: new Date().toISOString(),
+        };
+        appendMessage(activeConversationId, assistantMsg);
+      } catch (err: unknown) {
+        const errorMsg =
+          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+          (err as Error).message ||
+          'Failed to retrieve answer';
+        toast.error(errorMsg);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleNewChat = () => {
     newChat();
     setShowTemplates(true);
-    abortRef.current?.abort();
+    setInput('');
   };
 
   const isBusy = isLoading || isStreaming;
-  const charCount = input.length;
 
   return (
-    <div className="flex flex-col h-full bg-[#0f172a]">
-      {/* ── Chat header ── */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-[#1e293b] flex-shrink-0 bg-[#111827]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-3 h-3 text-white" />
-          </div>
-          <span className="text-sm font-semibold text-white">
-            {selectedDoc ? selectedDoc.filename : 'All Documents'}
-          </span>
-          {selectedDoc && (
-            <span className="text-[10px] font-semibold bg-indigo-500/15 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/25 uppercase tracking-wide">
-              Focused
+    <div className="flex flex-col h-full bg-[#0b0f17] overflow-hidden">
+      {/* Workspace Header Toolbar */}
+      <div className="flex items-center justify-between px-5 py-2.5 border-b border-slate-800 bg-[#111827] flex-shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-semibold text-slate-200">DocMind Workspace</span>
+          {selectedDoc ? (
+            <span className="text-xs text-slate-400 truncate max-w-[200px]">
+              &middot; {selectedDoc.filename}
             </span>
+          ) : (
+            <span className="text-xs text-slate-500">&middot; All indexed documents</span>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Streaming toggle */}
+        <div className="flex items-center gap-2">
+          {/* Settings button */}
+          <button
+            onClick={() => setShowConfig(!showConfig)}
+            className={clsx(
+              'flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border transition-colors cursor-pointer',
+              showConfig
+                ? 'bg-blue-600/10 border-blue-500/30 text-blue-400'
+                : 'bg-[#0b0f17] border-slate-800 text-slate-400 hover:text-slate-200'
+            )}
+            title="Retrieval Parameters"
+          >
+            <SlidersHorizontal className="w-3 h-3" />
+            <span>Parameters</span>
+          </button>
+
+          {/* Stream mode toggle */}
           <button
             onClick={() => setStreamingMode(!streamingMode)}
             className={clsx(
-              'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer',
+              'flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border transition-colors cursor-pointer',
               streamingMode
-                ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
-                : 'bg-[#1e293b] border-[#334155] text-slate-400 hover:text-white'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                : 'bg-[#0b0f17] border-slate-800 text-slate-400 hover:text-slate-200'
             )}
-            title={streamingMode ? 'Streaming ON — click to disable' : 'Streaming OFF — click to enable'}
           >
-            {streamingMode
-              ? <><Wifi className="w-3 h-3" /> Streaming</>
-              : <><WifiOff className="w-3 h-3" /> Normal</>}
+            {streamingMode ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            <span>{streamingMode ? 'Streaming' : 'Buffered'}</span>
           </button>
 
           {/* New chat */}
           {messages.length > 0 && (
             <button
               onClick={handleNewChat}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white border border-[#334155] hover:border-[#475569] px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700 rounded transition-colors cursor-pointer"
             >
-              <RotateCcw className="w-3 h-3" /> New chat
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Messages area ── */}
-      <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
-        {/* Welcome screen */}
+      {/* Retrieval Settings Drawer */}
+      {showConfig && (
+        <div className="px-5 py-3 border-b border-slate-800 bg-[#111827] text-xs grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <div className="flex justify-between text-slate-300 mb-1">
+              <span>Top K Chunks: {topK}</span>
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="20"
+              value={topK}
+              onChange={(e) => setTopK(Number(e.target.value))}
+              className="w-full accent-blue-600"
+            />
+          </div>
+          <div>
+            <div className="flex justify-between text-slate-300 mb-1">
+              <span>Min Similarity: {minSimilarity.toFixed(2)}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="0.9"
+              step="0.05"
+              value={minSimilarity}
+              onChange={(e) => setMinSimilarity(Number(e.target.value))}
+              className="w-full accent-blue-600"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Message History Feed */}
+      <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-5 py-6 space-y-4">
         {messages.length === 0 && showTemplates && (
-          <div className="animate-fade-in max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto pt-4">
             <div className="text-center mb-8">
-              <div className="relative inline-block mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl blur-xl opacity-40" />
-                <div className="relative w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/30">
-                  <Bot className="w-8 h-8 text-white" />
-                </div>
+              <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mx-auto mb-3">
+                <FileText className="w-5 h-5" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">DocMind AI</h2>
-              <p className="text-slate-400 text-sm leading-relaxed max-w-sm mx-auto">
+              <h2 className="text-lg font-semibold text-white tracking-tight">Document Intelligence Workspace</h2>
+              <p className="text-xs text-slate-400 max-w-md mx-auto mt-1 leading-relaxed">
                 {selectedDoc
-                  ? `Chatting with "${selectedDoc.filename}". Ask anything or pick a template below.`
-                  : 'Ask questions across all your indexed documents, or select one from the sidebar.'}
+                  ? `Active document: ${selectedDoc.filename}. Ask questions, extract structured data, or explore summaries.`
+                  : 'Ask targeted questions across your indexed repository. Use suggested prompts below to get started.'}
               </p>
-              {streamingMode && (
-                <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-                  <Wifi className="w-3 h-3" /> Real-time streaming enabled
-                </div>
-              )}
             </div>
 
-            {/* Template grid */}
+            {/* Prompt Categorized Grid */}
             <div className="space-y-3">
-              {PROMPT_TEMPLATES.map((cat) => (
-                <div key={cat.category} className={clsx('rounded-2xl border bg-gradient-to-br p-4', cat.gradient, cat.border)}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-base">{cat.icon}</span>
-                    <h3 className={clsx('text-xs font-bold uppercase tracking-wider', cat.accent)}>{cat.category}</h3>
+              {PROMPT_TEMPLATES.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <div key={cat.category} className="border border-slate-800 rounded-lg p-3 bg-[#111827]">
+                    <div className="flex items-center gap-1.5 mb-2.5 text-xs font-medium text-slate-300">
+                      <Icon className="w-3.5 h-3.5 text-blue-400" />
+                      <span>{cat.category}</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {cat.templates.map((t) => (
+                        <button
+                          key={t.label}
+                          onClick={() => sendMessage(t.prompt)}
+                          className="text-left p-2.5 rounded bg-[#0b0f17] border border-slate-800 hover:border-slate-700 transition-colors text-xs text-slate-300 hover:text-white cursor-pointer"
+                        >
+                          <span className="font-medium block mb-1 text-slate-200">{t.label}</span>
+                          <span className="text-[10px] text-slate-500 line-clamp-2">{t.prompt}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {cat.templates.map((t) => (
-                      <button
-                        key={t.label}
-                        onClick={() => sendMessage(t.prompt)}
-                        className="text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/8 hover:border-white/15 transition-all text-xs text-slate-200 hover:text-white group cursor-pointer"
-                      >
-                        <span className="font-medium block mb-0.5">{t.label}</span>
-                        <span className="text-slate-500 text-[10px] line-clamp-2 group-hover:text-slate-400 transition-colors">{t.prompt.slice(0, 55)}…</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Message list */}
+        {/* Message Feed */}
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
         ))}
 
-        {/* Typing indicator (non-streaming mode) */}
         {isLoading && !isStreaming && <TypingIndicator />}
-
         <div ref={bottomRef} />
       </div>
 
-      {/* ── Input area ── */}
-      <div className="px-6 py-4 border-t border-[#1e293b] flex-shrink-0 bg-[#111827]">
-        {/* Streaming status */}
-        {isStreaming && (
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex gap-0.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '100ms' }} />
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '200ms' }} />
-            </div>
-            <span className="text-xs text-emerald-400 font-medium">AI is responding…</span>
-          </div>
-        )}
-
-        <div className={clsx(
-          'flex gap-3 items-end bg-[#1e293b] border rounded-2xl px-4 py-3 transition-all',
-          isBusy ? 'border-[#334155]' : 'border-[#334155] focus-within:border-indigo-500/50'
-        )}>
+      {/* Input Composer */}
+      <div className="px-5 py-3 border-t border-slate-800 bg-[#111827] flex-shrink-0">
+        <div className="relative flex items-end gap-2 bg-[#0b0f17] border border-slate-800 rounded-xl px-3.5 py-2.5 focus-within:border-blue-500 transition-colors">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(input);
+              }
             }}
             placeholder={
-              isBusy ? 'Waiting for response…' :
-              selectedDoc ? `Ask about "${selectedDoc.filename}"…` :
-              'Ask a question about your documents…'
+              isBusy
+                ? 'Processing response...'
+                : selectedDoc
+                ? `Ask about ${selectedDoc.filename}...`
+                : 'Ask a question across your documents...'
             }
             rows={1}
             disabled={isBusy}
-            className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 resize-none outline-none leading-relaxed disabled:opacity-60"
-            style={{ minHeight: '24px', maxHeight: '144px' }}
+            className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 resize-none outline-none leading-relaxed disabled:opacity-50"
+            style={{ minHeight: '22px', maxHeight: '120px' }}
             onInput={(e) => {
               const t = e.currentTarget;
               t.style.height = 'auto';
-              t.style.height = `${Math.min(t.scrollHeight, 144)}px`;
+              t.style.height = `${Math.min(t.scrollHeight, 120)}px`;
             }}
           />
 
-          {/* Stop / Send button */}
           {isStreaming ? (
             <button
               onClick={stopStream}
-              className="flex-shrink-0 p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 rounded-xl transition-colors cursor-pointer"
-              title="Stop generation"
+              className="p-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg transition-colors cursor-pointer"
+              title="Stop"
             >
               <Square className="w-4 h-4" />
             </button>
@@ -865,28 +713,17 @@ const ChatView: React.FC = () => {
             <button
               onClick={() => sendMessage(input)}
               disabled={!input.trim() || isBusy}
-              className="flex-shrink-0 p-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition-all shadow-sm shadow-indigo-500/25 cursor-pointer"
+              className="p-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg transition-colors cursor-pointer"
+              aria-label="Send message"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           )}
         </div>
 
-        {/* Footer hint */}
-        <div className="flex items-center justify-between mt-2 px-1">
-          <p className="text-[11px] text-slate-600">
-            Enter to send · Shift+Enter for new line
-          </p>
-          <div className="flex items-center gap-2">
-            {charCount > 0 && (
-              <span className={clsx('text-[11px]', charCount > 1000 ? 'text-amber-500' : 'text-slate-600')}>
-                {charCount}
-              </span>
-            )}
-            {messages.length > 0 && (
-              <span className="text-[11px] text-slate-600">{messages.length} msgs</span>
-            )}
-          </div>
+        <div className="flex items-center justify-between mt-1.5 px-1 text-[11px] text-slate-500">
+          <span>Press ↵ to send &middot; Shift+↵ for new line</span>
+          {messages.length > 0 && <span>{messages.length} messages</span>}
         </div>
       </div>
     </div>

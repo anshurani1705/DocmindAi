@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
-  X, Upload, FileText, CheckCircle, AlertCircle, Loader2, Plus,
-  File, FileImage, FileCode, FilePieChart, Trash2
+  X, Upload, FileText, CheckCircle2, AlertCircle, Loader2, Plus,
+  File, FileType, FilePieChart, Trash2
 } from 'lucide-react';
 import { documentApi } from '../services/api';
 import { useDocumentStore } from '../store/documentStore';
@@ -31,10 +31,9 @@ function formatBytes(bytes: number): string {
 
 function getFileIcon(name: string) {
   const ext = name.split('.').pop()?.toLowerCase();
-  if (ext === 'pdf') return <FileText className="w-4 h-4 text-red-400" />;
-  if (ext === 'csv') return <FilePieChart className="w-4 h-4 text-green-400" />;
-  if (ext === 'md') return <FileCode className="w-4 h-4 text-purple-400" />;
-  if (ext === 'docx') return <FileImage className="w-4 h-4 text-blue-400" />;
+  if (ext === 'pdf') return <FileText className="w-4 h-4 text-rose-400" />;
+  if (ext === 'csv') return <FilePieChart className="w-4 h-4 text-emerald-400" />;
+  if (ext === 'docx') return <FileType className="w-4 h-4 text-blue-400" />;
   return <File className="w-4 h-4 text-slate-400" />;
 }
 
@@ -106,25 +105,26 @@ const UploadDialog: React.FC<UploadDialogProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-xs" onClick={handleClose} />
 
-      {/* Dialog */}
-      <div className="relative z-10 w-full max-w-lg bg-[#1e293b] border border-[#334155] rounded-2xl shadow-2xl shadow-black/50 animate-fade-in">
+      {/* Dialog Card */}
+      <div className="relative z-10 w-full max-w-lg bg-[#111827] border border-slate-800 rounded-xl shadow-xl animate-fade-in overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#334155]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-indigo-500/20 rounded-xl flex items-center justify-center">
-              <Upload className="w-4 h-4 text-indigo-400" />
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 bg-[#0b0f17]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-blue-600/10 border border-blue-500/20 rounded-md flex items-center justify-center">
+              <Upload className="w-3.5 h-3.5 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white">Upload Documents</h2>
-              <p className="text-xs text-slate-400">PDF · DOCX · TXT · MD · CSV</p>
+              <h2 className="text-sm font-semibold text-white">Upload Documents</h2>
+              <p className="text-[11px] text-slate-400">Supported: PDF, DOCX, TXT, MD, CSV</p>
             </div>
           </div>
           <button
             onClick={handleClose}
             disabled={isUploading}
-            className="p-1.5 hover:bg-[#334155] rounded-lg transition-colors text-slate-400 hover:text-white disabled:opacity-40"
+            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors disabled:opacity-40 cursor-pointer"
+            aria-label="Close dialog"
           >
             <X className="w-4 h-4" />
           </button>
@@ -135,104 +135,85 @@ const UploadDialog: React.FC<UploadDialogProps> = ({ isOpen, onClose }) => {
           <div
             {...getRootProps()}
             className={clsx(
-              'relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 overflow-hidden group',
+              'border border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors bg-[#0b0f17]',
               isDragActive
-                ? 'border-indigo-500 bg-indigo-500/10'
-                : 'border-[#334155] hover:border-indigo-500/50 hover:bg-white/[0.02]'
+                ? 'border-blue-500 bg-blue-500/5'
+                : 'border-slate-800 hover:border-slate-700'
             )}
           >
             <input {...getInputProps()} />
-            {/* Animated background blob */}
-            <div className={clsx(
-              'absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 transition-opacity duration-300',
-              isDragActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            )} />
-            <div className="relative flex flex-col items-center gap-3">
-              <div className={clsx(
-                'w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300',
-                isDragActive ? 'bg-indigo-500/20 scale-110' : 'bg-[#0f172a] group-hover:scale-105'
-              )}>
-                <Upload className={clsx('w-6 h-6 transition-colors', isDragActive ? 'text-indigo-400' : 'text-slate-400')} />
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400">
+                <Upload className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-white font-medium">
-                  {isDragActive ? '✨ Drop to upload' : 'Drag & drop files here'}
+                <p className="text-xs font-medium text-slate-200">
+                  {isDragActive ? 'Release to upload files' : 'Drop documents here or browse'}
                 </p>
-                <p className="text-slate-400 text-sm mt-1">
-                  or <span className="text-indigo-400 hover:underline">click to browse</span>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Files are partitioned into vector chunks for semantic search
                 </p>
-              </div>
-              <div className="flex flex-wrap gap-1.5 justify-center mt-1">
-                {[
-                  { ext: 'PDF', color: 'text-red-400 bg-red-400/10' },
-                  { ext: 'DOCX', color: 'text-blue-400 bg-blue-400/10' },
-                  { ext: 'TXT', color: 'text-slate-300 bg-slate-400/10' },
-                  { ext: 'MD', color: 'text-purple-400 bg-purple-400/10' },
-                  { ext: 'CSV', color: 'text-green-400 bg-green-400/10' },
-                ].map(({ ext, color }) => (
-                  <span key={ext} className={clsx('text-xs px-2 py-0.5 rounded-full font-medium', color)}>
-                    .{ext.toLowerCase()}
-                  </span>
-                ))}
               </div>
             </div>
           </div>
 
-          {/* Stats bar when files selected */}
+          {/* Stats Bar */}
           {files.length > 0 && (
             <div className="flex items-center justify-between mt-3 px-1">
-              <span className="text-xs text-slate-400">{files.length} file(s) · {formatBytes(totalSize)}</span>
+              <span className="text-[11px] text-slate-400 font-mono">
+                {files.length} selected &middot; {formatBytes(totalSize)}
+              </span>
               <button
                 onClick={() => setFiles([])}
                 disabled={isUploading}
-                className="text-xs text-slate-500 hover:text-red-400 flex items-center gap-1 transition-colors disabled:opacity-40"
+                className="text-[11px] text-slate-500 hover:text-rose-400 flex items-center gap-1 transition-colors disabled:opacity-40 cursor-pointer"
               >
-                <Trash2 className="w-3 h-3" /> Clear all
+                <Trash2 className="w-3 h-3" /> Clear
               </button>
             </div>
           )}
 
-          {/* File list */}
+          {/* File Queue */}
           {files.length > 0 && (
-            <div className="mt-2 space-y-2 max-h-56 overflow-y-auto pr-1">
+            <div className="mt-2 space-y-1.5 max-h-52 overflow-y-auto pr-1">
               {files.map((uf) => (
-                <div key={uf.id} className="flex items-center gap-3 p-3 bg-[#0f172a] rounded-xl border border-[#334155]">
-                  <div className="p-2 bg-[#1e293b] rounded-lg flex-shrink-0">
+                <div key={uf.id} className="flex items-center gap-2.5 p-2 bg-[#0b0f17] rounded-lg border border-slate-800">
+                  <div className="p-1.5 bg-slate-900 rounded flex-shrink-0">
                     {getFileIcon(uf.file.name)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-xs text-white font-medium truncate max-w-[200px]">{uf.file.name}</p>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs text-slate-200 font-medium truncate max-w-[220px]">{uf.file.name}</p>
                       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                        <span className="text-xs text-slate-500">{formatBytes(uf.file.size)}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">{formatBytes(uf.file.size)}</span>
                         {uf.status === 'pending' && (
-                          <button onClick={() => removeFile(uf.id)} className="text-slate-500 hover:text-red-400 transition-colors">
+                          <button onClick={() => removeFile(uf.id)} className="text-slate-500 hover:text-rose-400 transition-colors cursor-pointer">
                             <X className="w-3 h-3" />
                           </button>
                         )}
-                        {uf.status === 'uploading' && <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />}
-                        {uf.status === 'done' && <CheckCircle className="w-3.5 h-3.5 text-green-400" />}
-                        {uf.status === 'error' && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
+                        {uf.status === 'uploading' && <Loader2 className="w-3 h-3 text-blue-400 animate-spin" />}
+                        {uf.status === 'done' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                        {uf.status === 'error' && <AlertCircle className="w-3.5 h-3.5 text-rose-400" />}
                       </div>
                     </div>
-                    {/* Progress bar */}
-                    <div className="w-full bg-[#334155] rounded-full h-1">
+                    {/* Progress Bar */}
+                    <div className="w-full bg-slate-900 rounded-full h-1 overflow-hidden">
                       <div
                         className={clsx(
-                          'h-1 rounded-full transition-all duration-300',
-                          uf.status === 'done' ? 'bg-green-500' :
-                          uf.status === 'error' ? 'bg-red-500' :
-                          uf.status === 'uploading' ? 'bg-indigo-500' : 'bg-[#334155]'
+                          'h-1 rounded-full transition-all duration-200',
+                          uf.status === 'done' ? 'bg-emerald-500' :
+                          uf.status === 'error' ? 'bg-rose-500' :
+                          uf.status === 'uploading' ? 'bg-blue-500' : 'bg-slate-800'
                         )}
                         style={{ width: uf.status === 'pending' ? '0%' : `${uf.progress}%` }}
                       />
                     </div>
                     {uf.status === 'error' && (
-                      <p className="text-xs text-red-400 mt-1">{uf.error}</p>
+                      <p className="text-[10px] text-rose-400 mt-1">{uf.error}</p>
                     )}
                     {uf.status === 'done' && uf.result && (
-                      <p className="text-xs text-green-400 mt-1">
-                        ✓ {uf.result.chunksCreated ?? 0} chunks indexed
+                      <p className="text-[10px] text-emerald-400 mt-0.5">
+                        Indexed &middot; {uf.result.chunksCreated ?? 0} chunks created
                       </p>
                     )}
                   </div>
@@ -242,25 +223,25 @@ const UploadDialog: React.FC<UploadDialogProps> = ({ isOpen, onClose }) => {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[#334155]">
+        {/* Footer Actions */}
+        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-800 bg-[#0b0f17]">
           <button
             onClick={handleClose}
             disabled={isUploading}
-            className="px-4 py-2 text-sm text-slate-400 hover:text-white border border-[#334155] hover:border-[#475569] rounded-xl transition-colors disabled:opacity-50"
+            className="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700 rounded-md transition-colors disabled:opacity-50 cursor-pointer"
           >
-            {allDone ? 'Close' : 'Cancel'}
+            {allDone ? 'Done' : 'Cancel'}
           </button>
           {!allDone && (
             <button
               onClick={handleUpload}
               disabled={isUploading || pendingCount === 0}
-              className="flex items-center gap-2 px-5 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {isUploading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> <span>Indexing...</span></>
               ) : (
-                <><Plus className="w-4 h-4" /> Upload {pendingCount} file{pendingCount !== 1 ? 's' : ''}</>
+                <><Plus className="w-3.5 h-3.5" /> <span>Upload {pendingCount > 0 ? `${pendingCount} File${pendingCount > 1 ? 's' : ''}` : ''}</span></>
               )}
             </button>
           )}
